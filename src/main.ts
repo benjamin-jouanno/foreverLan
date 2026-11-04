@@ -41,6 +41,19 @@ interface PlayerProfile { name: string; race: string; wowClass: string; }
 const PROFILE_STORAGE_KEY = 'forever-lan-profile-v1';
 const RACES = ['Humain','Nain','Elfe de la nuit','Gnome','Orc','Mort-vivant','Tauren','Troll'];
 const CLASSES = ['Guerrier','Paladin','Chasseur','Voleur','Prêtre','Chaman','Mage','Démoniste','Druide'];
+interface TavernItem { id: string; name: string; description: string; category: string; price: number; icon: string; }
+// Carte et tarifs provisoires, à remplacer par la liste définitive de la LAN.
+const TAVERN_ITEMS: readonly TavernItem[] = [
+ {id:'kinder-maxi',name:'Kinder Maxi',description:'Une barre de chocolat au lait pour une pause bien méritée.',category:'Sucré',price:1,icon:'🍫'},
+ {id:'bonbons',name:'Bonbons',description:'Une portion de douceurs pour refaire le plein de bonne humeur.',category:'Sucré',price:1,icon:'🍬'},
+ {id:'pancake-chocolat',name:'Pancake au chocolat',description:'Un pancake gourmand, garni de chocolat.',category:'Sucré',price:2,icon:'🥞'},
+ {id:'cookie',name:'Cookie',description:'Un cookie aux pépites de chocolat pour accompagner la pause.',category:'Sucré',price:1,icon:'🍪'},
+ {id:'chips',name:'Chips',description:'Une portion croustillante à grignoter entre deux aventures.',category:'Salé',price:1,icon:'🥔'},
+ {id:'pop-corn',name:'Pop-corn',description:'Une portion à savourer en regardant les exploits de la guilde.',category:'Salé',price:1,icon:'🍿'},
+ {id:'soda',name:'Soda',description:'Une canette bien fraîche, au choix selon les boissons disponibles.',category:'Boissons',price:2,icon:'🥤'},
+ {id:'jus',name:'Jus de fruits',description:'Un verre fruité pour une pause rafraîchissante.',category:'Boissons',price:1,icon:'🧃'},
+ {id:'chocolat-chaud',name:'Chocolat chaud',description:'Une tasse réconfortante pour les longues soirées à la taverne.',category:'Boissons',price:2,icon:'☕'}
+];
 @Component({selector:'app-root',standalone:true,templateUrl:'./app.html'})
 class App {
  @ViewChild('profileDialog') profileDialog!: ElementRef<HTMLDialogElement>;
@@ -80,6 +93,9 @@ class App {
    if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)this.closeQuest();
  }
  readonly quests=QUESTS;
+ readonly tavernCategories=['Tout','Sucré','Salé','Boissons'];
+ tavernCategory=signal('Tout');
+ tavernItems=computed(()=>TAVERN_ITEMS.filter(item=>this.tavernCategory()==='Tout'||item.category===this.tavernCategory()));
  readonly adminQuests=HIDDEN_QUESTS;
  adminUnlocked=signal(this.loadAdminSession());
  loadAdminSession():boolean{try{return sessionStorage.getItem(ADMIN_SESSION_KEY)==='unlocked';}catch{return false;}}

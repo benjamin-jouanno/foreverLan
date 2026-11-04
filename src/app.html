@@ -13,7 +13,7 @@
   </nav>
 </header>
 
-<main class="dashboard" [class.list-view]="view() === 'journal' || view() === 'achievements' || view() === 'admin'">
+<main class="dashboard" [class.list-view]="view() === 'journal' || view() === 'achievements' || view() === 'admin' || view() === 'tavern'">
   <aside class="left-column">
     <section class="frame adventurer-panel">
       <h2 class="panel-title"><span>🛡️</span> L’Aventurier</h2>
@@ -75,7 +75,13 @@
         <p class="gamble-note">✦ Jouez les duels dans WoW et réglez les pièces entre vous. Cette page présente les règles ; elle ne lance pas de dés et ne modifie pas votre solde.</p>
       </div>
     } @else if (view() === 'tavern') {
-      <div class="quest-heading"><h2><span>🍺</span> La Taverne</h2></div><div class="parchment story-page"><span class="story-icon">🍻</span><h3>Une place pour chaque compagnon</h3><p>Posez votre équipement, rapprochez votre chaise et retrouvez la guilde. Cette Forever LAN se joue autant en Azeroth que dans la vraie vie.</p><div class="story-divider">✧ ⚔ ✧</div><h4>En jeu</h4><p>Explorez, combattez et partez en donjon avec les membres de la LAN.</p><h4>Dans la vraie vie</h4><p>Faites connaissance, partagez un repas et créez des souvenirs ensemble.</p><button class="wood-button" (click)="view.set('journal')">Ouvrir le journal de quêtes</button></div>
+      <div class="quest-heading"><h2><span>🍺</span> La Taverne</h2><span class="quest-total">Le comptoir de la guilde</span></div>
+      <div class="parchment catalog-page">
+        <div class="catalog-intro"><span class="catalog-label">✦ LA CARTE DU TAVERNIER ✦</span><h3>Du butin à grignoter</h3><p>Vos aventures remplissent votre bourse. Voici de quoi régaler votre héros entre deux quêtes.</p><span class="sample-menu">Carte et prix provisoires</span></div>
+        <div class="shop-tabs" role="group" aria-label="Catégorie de gourmandises">@for(category of tavernCategories; track category){<button type="button" [class.selected]="tavernCategory() === category" [attr.aria-pressed]="tavernCategory() === category" (click)="tavernCategory.set(category)">{{category}}</button>}</div>
+        <div class="shop-grid" role="region" aria-label="Catalogue de la taverne" tabindex="0">@for(item of tavernItems(); track item.id){<article class="shop-item"><span class="shop-icon" aria-hidden="true">{{item.icon}}</span><div class="shop-item-copy"><small>{{item.category}}</small><h4>{{item.name}}</h4><p>{{item.description}}</p></div><div class="shop-price"><span class="coin" aria-hidden="true">✦</span><strong>{{item.price}}</strong><span>{{item.price === 1 ? 'pièce' : 'pièces'}}</span></div></article>}</div>
+        <div class="shop-footer"><span>{{tavernItems().length}} gourmandises à découvrir</span><span>✦ À échanger auprès du tavernier</span></div>
+      </div>
     } @else {
       <div class="quest-heading"><h2><span>📖</span> Les règles de la guilde</h2></div><div class="parchment story-page"><h3>À chaque aventure, son haut fait</h3><ol><li><b>Choisissez votre défi.</b> Les quêtes sont prédéfinies et réparties entre « En jeu » et « IRL ».</li><li><b>Accomplissez l’objectif.</b> Lisez la consigne et relevez le défi avec vos compagnons.</li><li><b>Validez votre réussite.</b> Ouvrez les détails de la quête, puis cliquez sur « Terminer la quête » une fois son objectif rempli. La validation est définitive dans le journal.</li><li><b>Forgez votre légende.</b> Chaque quête terminée rapporte des pièces. Les hauts faits sont des quêtes cachées indépendantes : saisissez leur code dans la page des hauts faits pour les révéler et les accomplir automatiquement.</li></ol><div class="story-divider">✧ ⚔ ✧</div><p>Votre progression est sauvegardée sur ce navigateur et cet appareil. Elle n’est pas partagée entre les joueurs. Effacer les données du site efface aussi votre progression.</p></div>
     }

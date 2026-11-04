@@ -43,7 +43,11 @@ Catalogue organisateur : `HIDDEN_QUESTS` dans `src/main.ts`. Les 13 hauts faits 
 
 La sauvegarde séparée utilise `forever-lan-hidden-completed-v1` et ne contient que les identifiants débloqués. Les anciens secrets de démonstration ne valident aucun de ces hauts faits et ne rapportent plus de pièces. Les codes et descriptions ne sont pas affichés avant découverte, sauf dans l’onglet Admin. Comme toute application entièrement locale, le catalogue reste consultable dans le code du navigateur.
 
-## Gamble Gamble
+## Catalogue de la taverne
+
+La taverne présente neuf gourmandises et boissons, filtrables par catégorie : Kinder Maxi, bonbons, pancake au chocolat, cookie, chips, pop-corn, soda, jus de fruits et chocolat chaud. La carte et ses prix (1 ou 2 pièces) sont provisoires et modifiables dans `TAVERN_ITEMS` dans `src/main.ts`. Le catalogue défile dans son panneau. Il présente les échanges possibles auprès du tavernier, sans effectuer de commande ni de débit automatique.
+
+## Règles de Gamble Gamble
 
 L’onglet doré « Gamble Gamble » explique le « Random pour les hommes ». Les deux joueurs lancent `/rand 6` dans WoW. Le plus grand jet gagne la différence, versée par le perdant. À égalité, chacun perd le montant de son jet. Un joueur ne peut payer que les pièces qu’il possède ; en cas de paiement insuffisant, le gagnant ne reçoit que le montant effectivement payé. Cette page est informative : aucun lancer, transfert ou débit n’est effectué par l’application.
 
