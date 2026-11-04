@@ -15,9 +15,7 @@
 <div class="app-layout" [hidden]="!lanStarted()" [attr.inert]="!lanStarted() ? '' : null">
 <div class="tavern-glow" aria-hidden="true"></div>
 <header class="masthead">
-  <div class="hanging-banner alliance" aria-hidden="true">♜</div>
   <a class="logo" [href]="earlyAccess ? '/admin' : './'" aria-label="WoW Forever LAN, accueil"><img class="brand-logo" src="assets/forever-lan-logo.webp" alt="World of Warcraft Forever" width="300" height="244"><span class="logo-ribbon">Suivi des Quêtes</span></a>
-  <div class="hanging-banner horde" aria-hidden="true">⚔</div>
   <nav class="main-nav" aria-label="Navigation principale">
     <button [class.selected]="view() === 'journal'" (click)="view.set('journal')"><span>📜</span> Quêtes</button>
     <button [class.selected]="view() === 'achievements'" (click)="view.set('achievements')"><span>🏆</span> Hauts faits</button>
