@@ -39,6 +39,8 @@ const HIDDEN_STORAGE_KEY = 'forever-lan-hidden-completed-v1';
 const ADMIN_SESSION_KEY = 'forever-lan-admin-session';
 interface PlayerProfile { name: string; race: string; wowClass: string; }
 const PROFILE_STORAGE_KEY = 'forever-lan-profile-v1';
+// 6 novembre 2026 à 20 h à Paris (UTC+1), quel que soit le fuseau du navigateur.
+const LAN_START = Date.parse('2026-11-06T20:00:00+01:00');
 const RACES = ['Humain','Nain','Elfe de la nuit','Gnome','Orc','Mort-vivant','Tauren','Troll'];
 const CLASSES = ['Guerrier','Paladin','Chasseur','Voleur','Prêtre','Chaman','Mage','Démoniste','Druide'];
 interface TavernItem { id: string; name: string; description: string; category: string; price: number; icon: string; }
@@ -56,12 +58,39 @@ const TAVERN_ITEMS: readonly TavernItem[] = [
 ];
 @Component({selector:'app-root',standalone:true,templateUrl:'./app.html'})
 class App {
+ readonly earlyAccess=typeof location!=='undefined'&&/^\/admin\/?$/.test(location.pathname);
+ now=signal(Date.now());
+ lanStarted=computed(()=>this.earlyAccess||this.now()>=LAN_START);
+ countdown=computed(()=>{
+   const total=Math.max(0,Math.ceil((LAN_START-this.now())/1000));
+   return [
+     {label:'Jours',value:String(Math.floor(total/86400)).padStart(2,'0')},
+     {label:'Heures',value:String(Math.floor(total%86400/3600)).padStart(2,'0')},
+     {label:'Minutes',value:String(Math.floor(total%3600/60)).padStart(2,'0')},
+     {label:'Secondes',value:String(total%60).padStart(2,'0')}
+   ];
+ });
+ clockTimer:ReturnType<typeof setInterval>|undefined;
+ unlockTimer:ReturnType<typeof setTimeout>|undefined;
+ viewReady=false;
+ updateClock(time=Date.now()){
+   const wasStarted=this.lanStarted();this.now.set(time);
+   if(!wasStarted&&this.lanStarted()){
+     clearInterval(this.clockTimer);
+     this.unlockTimer=setTimeout(()=>{if(this.viewReady&&!this.profile())this.openProfile();},0);
+   }
+ }
+ ngOnDestroy(){clearInterval(this.clockTimer);clearTimeout(this.unlockTimer);clearTimeout(this.timer);}
  @ViewChild('profileDialog') profileDialog!: ElementRef<HTMLDialogElement>;
  readonly races=RACES;
  readonly classes=CLASSES;
  profile=signal<PlayerProfile|null>(this.loadProfile());
  profileName=signal(''); profileRace=signal(''); profileClass=signal(''); profileError=signal('');
- ngAfterViewInit(){if(!this.profile())this.openProfile();}
+ ngAfterViewInit(){
+   this.viewReady=true;
+   if(this.lanStarted()){if(!this.profile())this.openProfile();}
+   else this.clockTimer=setInterval(()=>this.updateClock(),1000);
+ }
  loadProfile():PlayerProfile|null{
    try{
      const data=JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY)??'null');

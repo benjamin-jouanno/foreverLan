@@ -1,7 +1,22 @@
+@if(!lanStarted()){
+  <main class="waiting-screen" aria-labelledby="waiting-title">
+    <img class="waiting-logo" src="assets/forever-lan-logo.webp" alt="World of Warcraft Forever" width="300" height="244" fetchpriority="high">
+    <p class="waiting-eyebrow">LA GUILDE SE RASSEMBLE</p>
+    <h1 id="waiting-title" class="visually-hidden">WoW Forever LAN</h1>
+    <div class="waiting-flourish" aria-hidden="true">✦ ───── ⚔ ───── ✦</div>
+    <h2>Les portes d’Azeroth s’ouvrent bientôt.</h2>
+    <p class="waiting-description">Préparez vos claviers, rassemblez vos compagnons.<br>Une nouvelle légende est sur le point de s’écrire.</p>
+    <div class="countdown" role="timer" aria-label="Temps restant avant le début de la LAN" aria-live="off">@for(part of countdown(); track part.label){<div class="countdown-unit"><strong>{{part.value}}</strong><span>{{part.label}}</span></div>}</div>
+    <div class="waiting-date"><span aria-hidden="true">📅</span><time datetime="2026-11-06T20:00:00+01:00">6 novembre 2026 · 20 h</time><small>Heure de Paris</small></div>
+    <p class="waiting-note"><span aria-hidden="true">🔒</span> L’aventure se débloquera automatiquement à la fin du compte à rebours.</p>
+    <span class="waiting-signature">POUR LA GUILDE. POUR LES SOUVENIRS.</span>
+  </main>
+}
+<div class="app-layout" [hidden]="!lanStarted()" [attr.inert]="!lanStarted() ? '' : null">
 <div class="tavern-glow" aria-hidden="true"></div>
 <header class="masthead">
   <div class="hanging-banner alliance" aria-hidden="true">♜</div>
-  <a class="logo" href="./" aria-label="WoW Forever LAN, accueil"><span class="logo-medallion">W</span><h1>WoW Forever LAN</h1><span class="logo-ribbon">Suivi des Quêtes</span></a>
+  <a class="logo" [href]="earlyAccess ? '/admin' : './'" aria-label="WoW Forever LAN, accueil"><img class="brand-logo" src="assets/forever-lan-logo.webp" alt="World of Warcraft Forever" width="300" height="244"><span class="logo-ribbon">Suivi des Quêtes</span></a>
   <div class="hanging-banner horde" aria-hidden="true">⚔</div>
   <nav class="main-nav" aria-label="Navigation principale">
     <button [class.selected]="view() === 'journal'" (click)="view.set('journal')"><span>📜</span> Quêtes</button>
@@ -122,3 +137,4 @@
     </div><div class="dialog-actions"><button type="submit" class="wood-button complete-quest">{{profile() ? 'Enregistrer mon profil' : 'Rejoindre l’aventure →'}}</button></div>
   </form>
 </dialog>
+</div>

@@ -5,9 +5,11 @@ const vm = require('node:vm');
 const ts = require('typescript');
 
 // Isoler les transitions du journal, sans navigateur ni modification du stockage réel.
-function createApp(saved = {}, sessionSaved = {}) {
+function createApp(saved = {}, sessionSaved = {}, currentTime = Date.parse('2026-11-07T00:00:00Z'), pathname = '/') {
   const storage = new Map(Object.entries(saved));
   const session = new Map(Object.entries(sessionSaved));
+  const clock = { time: currentTime };
+  const pendingTimers = [];
   const angular = {
     Component: () => target => target,
     ViewChild: () => () => {},
@@ -24,9 +26,13 @@ function createApp(saved = {}, sessionSaved = {}) {
   const context = vm.createContext({
     require: () => angular,
     exports: {},
+    location: { pathname },
     localStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) },
     sessionStorage: { getItem: key => session.get(key) ?? null, setItem: (key, value) => session.set(key, value), removeItem: key => session.delete(key) },
-    setTimeout: () => 0,
+    Date: class extends Date { static now() { return clock.time; } },
+    setTimeout: callback => { pendingTimers.push(callback); return pendingTimers.length; },
+    setInterval: () => 1,
+    clearInterval: () => {},
     clearTimeout: () => {},
     console
   });
@@ -40,7 +46,7 @@ function createApp(saved = {}, sessionSaved = {}) {
   app.questDialog = { nativeElement: dialog };
   const profileDialog = { open: false, showModal() { this.open = true; }, close() { this.open = false; } };
   app.profileDialog = { nativeElement: profileDialog };
-  return { app, storage, dialog, session, profileDialog };
+  return { app, storage, dialog, session, profileDialog, clock, flushTimers: () => { while (pendingTimers.length) pendingTimers.shift()(); } };
 }
 
 test('ouvrir les détails ne valide pas la quête et ne rapporte aucune pièce', () => {
@@ -305,4 +311,61 @@ test('modifier son profil conserve les quêtes, les pièces et les hauts faits',
   assert.equal(app.unlockedHidden().length, 1);
   assert.equal(app.coins(), 2);
   assert.equal(JSON.parse(storage.get('forever-lan-profile-v1')).race, 'Orc');
+});
+
+test('avant le 6 novembre à 20 h à Paris, le compte à rebours bloque l’arrivée au profil', () => {
+  const { app, profileDialog } = createApp({}, {}, Date.parse('2026-11-04T19:00:00Z'));
+  app.ngAfterViewInit();
+  assert.equal(app.lanStarted(), false);
+  assert.equal(profileDialog.open, false);
+  assert.deepEqual(Array.from(app.countdown(), part => part.value), ['02', '00', '00', '00']);
+});
+
+test('le déblocage intervient précisément à 19 h UTC, soit 20 h à Paris', () => {
+  const { app, clock, profileDialog, flushTimers } = createApp({}, {}, Date.parse('2026-11-06T18:59:59.999Z'));
+  app.ngAfterViewInit();
+  assert.equal(app.lanStarted(), false);
+  assert.equal(app.countdown()[3].value, '01');
+  clock.time = Date.parse('2026-11-06T19:00:00Z');
+  app.updateClock();
+  assert.equal(app.lanStarted(), true);
+  assert.deepEqual(Array.from(app.countdown(), part => part.value), ['00', '00', '00', '00']);
+  flushTimers();
+  assert.equal(profileDialog.open, true);
+});
+
+test('le retour d’un onglet en veille débloque aussi la LAN sans redemander un profil existant', () => {
+  const { app, clock, profileDialog, flushTimers } = createApp({
+    'forever-lan-profile-v1': JSON.stringify({ name: 'Thalarion', race: 'Humain', wowClass: 'Mage' }),
+    'forever-lan-completed-v2': '[101]'
+  }, {}, Date.parse('2026-11-06T18:00:00Z'));
+  app.ngAfterViewInit();
+  clock.time = Date.parse('2026-11-06T21:00:00Z');
+  app.updateClock();
+  flushTimers();
+  assert.equal(app.lanStarted(), true);
+  assert.equal(profileDialog.open, false);
+  assert.equal(app.completed().length, 1);
+  assert.deepEqual(Array.from(app.countdown(), part => part.value), ['00', '00', '00', '00']);
+});
+
+test('/admin et /admin/ permettent de visiter l’application avant la date', () => {
+  for (const path of ['/admin', '/admin/']) {
+    const { app, profileDialog } = createApp({}, {}, Date.parse('2026-11-04T12:00:00Z'), path);
+    assert.equal(app.earlyAccess, true);
+    assert.equal(app.lanStarted(), true);
+    app.ngAfterViewInit();
+    assert.equal(profileDialog.open, true);
+    assert.equal(app.adminUnlocked(), false);
+  }
+});
+
+test('le contournement reste limité à /admin et ne déverrouille pas les visites normales', () => {
+  for (const path of ['/', '/administrator', '/admin/other', '/Admin', '/other/admin']) {
+    const { app, profileDialog } = createApp({}, { 'forever-lan-admin-session': 'unlocked' }, Date.parse('2026-11-04T12:00:00Z'), path);
+    assert.equal(app.earlyAccess, false);
+    assert.equal(app.lanStarted(), false);
+    app.ngAfterViewInit();
+    assert.equal(profileDialog.open, false);
+  }
 });

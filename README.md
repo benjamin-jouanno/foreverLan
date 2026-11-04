@@ -13,6 +13,12 @@ Ouvrir http://localhost:4200. `npm run build` génère la version de production 
 
 Les 11 quêtes officielles sont prédéfinies dans `src/main.ts` : 9 **En jeu** et 2 **IRL**, pour un total de **13 pièces**. Les repas et discours sont IRL ; les niveaux, donjons, défis dans WoW et la capture des personnages sont en jeu. Cliquer sur une ligne ouvre une fenêtre avec sa description, son objectif et ses pièces. La validation se fait uniquement avec « Terminer la quête » dans cette fenêtre. Une quête terminée ne peut rapporter ses pièces qu’une seule fois.
 
+## Ouverture de la LAN
+
+L’écran d’attente affiche un compte à rebours jusqu’au **6 novembre 2026 à 20 h, heure de Paris** (`2026-11-06T20:00:00+01:00`, soit 19 h UTC). Il se met à jour chaque seconde à partir de l’heure de l’appareil, y compris après la mise en veille d’un onglet. À zéro, l’application devient accessible sans rechargement. La création du profil est proposée après l’ouverture seulement, si aucun profil valide n’est enregistré. La date est définie par `LAN_START` dans `src/main.ts`.
+
+Pour consulter l’application avant cette date, ouvrir `/admin` (par exemple http://localhost:4200/admin). Cet accès anticipé ne s’applique qu’à cette URL ; revenir à `/` affiche à nouveau le compte à rebours. Le profil est demandé normalement s’il est absent. L’onglet des codes secrets conserve son déverrouillage par code. En hébergement statique, configurer le renvoi des chemins de l’application vers `index.html`, comme pour toute entrée directe Angular.
+
 ## Profil d’aventurier
 
 À la première visite, une fenêtre demande le nom (1 à 32 caractères), la race et la classe. Le profil est enregistré dans `forever-lan-profile-v1` et réutilisé aux visites suivantes. Le panneau de l’aventurier affiche son nom, sa race, sa classe et une icône de classe. Cliquer sur ce panneau permet de modifier le profil sans modifier les quêtes ou les pièces. Un profil absent ou invalide ouvre de nouveau la création.

@@ -12,7 +12,9 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.json",
             "index": "src/index.html",
-            "assets": [{"glob": "**/*", "input": "public"}],
+            "assets": [
+              {"glob": "**/*", "input": "public"}
+            ],
             "styles": ["src/styles.css"],
             "outputPath": "dist/forever-lan"
           },
