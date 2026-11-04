@@ -1,0 +1,118 @@
+<div class="tavern-glow" aria-hidden="true"></div>
+<header class="masthead">
+  <div class="hanging-banner alliance" aria-hidden="true">♜</div>
+  <a class="logo" href="./" aria-label="WoW Forever LAN, accueil"><span class="logo-medallion">W</span><h1>WoW Forever LAN</h1><span class="logo-ribbon">Suivi des Quêtes</span></a>
+  <div class="hanging-banner horde" aria-hidden="true">⚔</div>
+  <nav class="main-nav" aria-label="Navigation principale">
+    <button [class.selected]="view() === 'journal'" (click)="view.set('journal')"><span>📜</span> Quêtes</button>
+    <button [class.selected]="view() === 'achievements'" (click)="view.set('achievements')"><span>🏆</span> Hauts faits</button>
+    <button [class.selected]="view() === 'tavern'" (click)="view.set('tavern')"><span>🍺</span> La Taverne</button>
+    <button class="gamble-tab" [class.selected]="view() === 'gamble'" (click)="view.set('gamble')"><span>🎲</span> Gamble Gamble</button>
+    <button [class.selected]="view() === 'rules'" (click)="view.set('rules')"><span>📖</span> Règles</button>
+    @if(adminUnlocked()){<button [class.selected]="view() === 'admin'" (click)="view.set('admin')"><span>🗝️</span> Admin</button>}
+  </nav>
+</header>
+
+<main class="dashboard" [class.list-view]="view() === 'journal' || view() === 'achievements' || view() === 'admin'">
+  <aside class="left-column">
+    <section class="frame adventurer-panel">
+      <h2 class="panel-title"><span>🛡️</span> L’Aventurier</h2>
+      <button type="button" class="player-row profile-button" aria-label="Modifier mon profil" title="Modifier mon profil" (click)="openProfile()"><span class="portrait">{{profileIcon()}}<span>{{completed().length}}</span></span><span class="profile-identity"><span class="profile-name">{{profile()?.name || 'Votre aventurier'}}</span><span class="profile-details">{{profile() ? profile()!.race + ' · ' + profile()!.wowClass : 'Créer votre profil'}}</span></span><span class="profile-pencil" aria-hidden="true">✎</span></button>
+      <div class="player-stats"><span><b class="coin">✦</b> {{coins()}} <small>{{coins() === 1 ? 'pièce' : 'pièces'}}</small></span><span>🏆 {{unlockedHidden().length}} <small>hauts faits</small></span></div>
+      <div class="engraved-divider"></div>
+      <p class="sidebar-caption">VOTRE CARNET D’AVENTURE</p>
+      <button class="side-link" (click)="view.set('journal'); category.set('En jeu')"><span>⚔️ Quêtes en jeu</span><b>{{categoryCompleted('En jeu')}} / {{categoryCount('En jeu')}}</b></button>
+      <button class="side-link" (click)="view.set('journal'); category.set('IRL')"><span>🍻 Quêtes IRL</span><b>{{categoryCompleted('IRL')}} / {{categoryCount('IRL')}}</b></button>
+      <div class="local-save"><i></i> Progression locale</div>
+    </section>
+    <section class="guild-note"><span class="note-pin">✦</span><h3>Bienvenue à la taverne</h3><p>En Azeroth comme autour de la table, les meilleures aventures se vivent ensemble.</p><span class="note-flourish">✧ ─── ⚔ ─── ✧</span><small>POUR LA GUILDE. POUR LES SOUVENIRS.</small></section>
+  </aside>
+
+  <section class="frame quest-panel">
+    @if (view() === 'journal') {
+      <div class="quest-heading"><h2><span>📜</span> Quêtes de la LAN</h2><span class="quest-total">❧ &nbsp; {{quests.length}} quêtes &nbsp; ❧</span></div>
+      <div class="category-tabs" role="group" aria-label="Type de quête">@for (cat of categories; track cat) {<button [class.selected]="category() === cat" [attr.aria-pressed]="category() === cat" (click)="category.set(cat)"><span>{{cat === 'Toutes les quêtes' ? '📜' : cat === 'En jeu' ? '⚔️' : '🍻'}}</span>{{cat === 'Toutes les quêtes' ? 'Toutes' : cat}}</button>}</div>
+      <div class="journal-tools"><label class="search"><span>⌕</span><input aria-label="Rechercher une quête" placeholder="Rechercher une quête…" [value]="search()" (input)="search.set($any($event.target).value)"></label><select aria-label="Filtrer par progression" [value]="status()" (change)="status.set($any($event.target).value)">@for(tab of tabs; track tab){<option [value]="tab">{{tab}} ({{count(tab)}})</option>}</select></div>
+      <div class="parchment quest-list" role="region" aria-label="Liste des quêtes" tabindex="0">
+        @for (quest of filtered(); track quest.id) {
+          <button type="button" class="quest-row" [class.completed]="isCompleted(quest)" aria-haspopup="dialog" (click)="openQuest(quest)">
+            <span class="quest-icon" aria-hidden="true">{{questIcon(quest.id)}}</span>
+            <span class="quest-copy"><span class="quest-name">{{quest.title}}</span><span class="quest-detail"><span class="type-badge" [class.irl]="quest.category === 'IRL'">{{quest.category}}</span><span class="quest-objective">{{quest.objective}}</span></span></span>
+            <span class="quest-reward" [attr.aria-label]="quest.coins + (quest.coins === 1 ? ' pièce' : ' pièces')"><span class="coin">✦</span><b>{{quest.coins}}</b><small>{{quest.coins === 1 ? 'pièce' : 'pièces'}}</small></span>
+            <span class="quest-row-state" [class.finished]="isCompleted(quest)" [attr.aria-label]="isCompleted(quest) ? 'Terminée' : 'Voir les détails'">{{isCompleted(quest) ? '✓' : '›'}}</span>
+          </button>
+        } @empty {<div class="empty"><span>📜</span><h3>Aucune quête trouvée</h3><p>Essayez une autre recherche ou modifiez les filtres.</p><button class="wood-button" (click)="clearFilters()">Effacer les filtres</button></div>}
+      </div>
+      <div class="panel-foot"><span>✦ {{filtered().length}} {{filtered().length === 1 ? 'quête' : 'quêtes'}} dans le journal</span><span>Cliquez sur une quête pour voir les détails <b>›</b></span></div>
+    } @else if (view() === 'achievements') {
+      <div class="quest-heading"><h2><span>🏆</span> Hauts faits cachés</h2><span class="quest-total">{{unlockedHidden().length}} / {{hiddenQuestCount}}</span></div>
+      <div class="parchment secret-page">
+        <div class="secret-intro"><span aria-hidden="true">🗝️</span><h3>Chaque secret a son code</h3><p>Des quêtes secrètes se cachent au fil de la LAN. Trouvez leur code et saisissez-le ici pour révéler votre haut fait et recevoir ses pièces.</p></div>
+        <form class="code-form" (submit)="$event.preventDefault(); redeemCode()"><label for="quest-code">Votre code de quête</label><div class="code-entry"><input id="quest-code" name="quest-code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="64" placeholder="Saisissez votre code…" [value]="questCode()" [attr.aria-invalid]="codeFeedbackState() === 'error' && codeFeedback() ? 'true' : null" aria-describedby="code-feedback" (input)="questCode.set($any($event.target).value); codeFeedback.set('')"><button class="wood-button" type="submit">Révéler le secret</button></div><p id="code-feedback" class="code-feedback" [class.error]="codeFeedbackState() === 'error'" [class.duplicate]="codeFeedbackState() === 'duplicate'" role="status">{{codeFeedback()}}</p></form>
+        <div class="secret-divider">✧ Vos découvertes ✧</div>
+        <div class="hidden-quest-list" role="region" aria-label="Liste des hauts faits découverts" tabindex="0">
+          @for(secret of unlockedHidden(); track secret.id){<article class="achievement-row secret-achievement"><span aria-hidden="true">{{secret.icon}}</span><div><h3>{{secret.title}}</h3><p>{{secret.description}}</p><small>✓ Haut fait accompli</small></div><b>+{{secret.coins}} {{secret.coins === 1 ? 'pièce' : 'pièces'}}</b></article>} @empty {<div class="secret-empty"><span>🔒</span><h3>Le mystère reste entier…</h3><p>Aucun haut fait révélé pour le moment. Gardez l’œil ouvert pendant la LAN !</p></div>}
+        </div>
+        @if(unlockedHidden().length < hiddenQuestCount){<p class="secrets-remaining">🔒 {{hiddenQuestCount - unlockedHidden().length}} {{hiddenQuestCount - unlockedHidden().length === 1 ? 'secret reste à découvrir' : 'secrets restent à découvrir'}}</p>} @else {<p class="secrets-remaining">✦ Tous les secrets ont été révélés !</p>}
+      </div>
+    } @else if (view() === 'admin' && adminUnlocked()) {
+      <div class="quest-heading"><h2><span>🗝️</span> Administration</h2><span class="quest-total">{{adminQuests.length}} secrets</span></div>
+      <div class="parchment admin-page"><h3>Le registre des secrets</h3><p>Retrouvez chaque code et la quête cachée qu’il débloque. Transmettez les codes aux aventuriers au fil de la LAN.</p>
+        <div class="admin-catalog" role="region" aria-label="Liste des quêtes cachées et de leurs codes" tabindex="0">@for(secret of adminQuests; track secret.id){<article class="admin-secret"><div class="admin-secret-heading"><span aria-hidden="true">{{secret.icon}}</span><h4>{{secret.title}}</h4><span class="admin-coins"><span class="coin" aria-hidden="true">✦</span> {{secret.coins}} {{secret.coins === 1 ? 'pièce' : 'pièces'}}</span></div><p>{{secret.description}}</p><div class="admin-code"><span>Code de déblocage</span><code>{{secret.code}}</code></div></article>}</div>
+        <div class="admin-footer"><p>Mode administrateur actif pour cette session d’onglet.</p><button type="button" class="wood-button" (click)="lockAdmin()">Quitter le mode admin</button></div>
+      </div>
+    } @else if (view() === 'gamble') {
+      <div class="quest-heading"><h2><span>🎲</span> Gamble Gamble</h2></div>
+      <div class="parchment gamble-page">
+        <div class="gamble-intro"><span aria-hidden="true">🎲</span><p>LES DÉS SONT JETÉS</p><h3>Le Random pour les hommes</h3><p>Deux aventuriers. Deux jets de dés. Une bourse qui change de mains.</p></div>
+        <ol class="gamble-rules">
+          <li><span class="rule-number">1</span><div><h4>Défiez un autre joueur</h4><p>Un joueur propose un duel à un autre. Si les deux acceptent, la partie peut commencer.</p></div></li>
+          <li><span class="rule-number">2</span><div><h4>Lancez les dés dans WoW</h4><p>Chaque joueur saisit <code>/rand 6</code> dans le jeu pour obtenir un nombre entre 1 et 6.</p></div></li>
+          <li><span class="rule-number">3</span><div><h4>Le plus grand nombre l’emporte</h4><p>Le perdant verse au gagnant un nombre de pièces égal à la <b>différence entre les deux jets</b>.</p><div class="gamble-example"><span>🎲 6 contre 🎲 2</span><p>Le joueur qui a obtenu 6 gagne <b>4 pièces</b>, payées par celui qui a obtenu 2.</p></div></div></li>
+          <li><span class="rule-number">4</span><div><h4>Égalité ? Les deux perdent !</h4><p>Si les deux joueurs obtiennent le même nombre, <b>chacun perd autant de pièces que ce nombre</b>. Aucun joueur ne remporte ces pièces.</p><div class="gamble-example"><span>🎲 3 contre 🎲 3</span><p>Chaque joueur perd <b>3 pièces</b>.</p></div></div></li>
+          <li><span class="rule-number">5</span><div><h4>Une bourse vide ne fait pas de dettes</h4><p>Si un joueur ne peut pas payer la somme due, il paie <b>toutes les pièces qu’il lui reste</b>. Cette règle s’applique aussi en cas d’égalité. Le solde ne descend jamais sous zéro.</p><div class="gamble-example"><span>4 pièces à payer · 2 en bourse</span><p>Le joueur paie ses <b>2 dernières pièces</b>. En cas de victoire adverse, le gagnant reçoit donc 2 pièces.</p></div></div></li>
+        </ol>
+        <p class="gamble-note">✦ Jouez les duels dans WoW et réglez les pièces entre vous. Cette page présente les règles ; elle ne lance pas de dés et ne modifie pas votre solde.</p>
+      </div>
+    } @else if (view() === 'tavern') {
+      <div class="quest-heading"><h2><span>🍺</span> La Taverne</h2></div><div class="parchment story-page"><span class="story-icon">🍻</span><h3>Une place pour chaque compagnon</h3><p>Posez votre équipement, rapprochez votre chaise et retrouvez la guilde. Cette Forever LAN se joue autant en Azeroth que dans la vraie vie.</p><div class="story-divider">✧ ⚔ ✧</div><h4>En jeu</h4><p>Explorez, combattez et partez en donjon avec les membres de la LAN.</p><h4>Dans la vraie vie</h4><p>Faites connaissance, partagez un repas et créez des souvenirs ensemble.</p><button class="wood-button" (click)="view.set('journal')">Ouvrir le journal de quêtes</button></div>
+    } @else {
+      <div class="quest-heading"><h2><span>📖</span> Les règles de la guilde</h2></div><div class="parchment story-page"><h3>À chaque aventure, son haut fait</h3><ol><li><b>Choisissez votre défi.</b> Les quêtes sont prédéfinies et réparties entre « En jeu » et « IRL ».</li><li><b>Accomplissez l’objectif.</b> Lisez la consigne et relevez le défi avec vos compagnons.</li><li><b>Validez votre réussite.</b> Ouvrez les détails de la quête, puis cliquez sur « Terminer la quête » une fois son objectif rempli. La validation est définitive dans le journal.</li><li><b>Forgez votre légende.</b> Chaque quête terminée rapporte des pièces. Les hauts faits sont des quêtes cachées indépendantes : saisissez leur code dans la page des hauts faits pour les révéler et les accomplir automatiquement.</li></ol><div class="story-divider">✧ ⚔ ✧</div><p>Votre progression est sauvegardée sur ce navigateur et cet appareil. Elle n’est pas partagée entre les joueurs. Effacer les données du site efface aussi votre progression.</p></div>
+    }
+  </section>
+
+  <aside class="right-column">
+    <section class="frame progress-panel"><h2 class="panel-title"><span>⚔️</span> Progression globale</h2><div class="progress-content"><div class="progress-bar" role="progressbar" aria-label="Quêtes terminées" [attr.aria-valuenow]="completed().length" aria-valuemin="0" [attr.aria-valuemax]="quests.length"><span [style.width.%]="progress()"></span></div><div class="progress-caption"><span>{{completed().length}} / {{quests.length}} quêtes terminées</span><strong>{{progress()}} %</strong></div></div></section>
+    <section class="frame"><h2 class="panel-title"><span>👑</span> Vos hauts faits</h2><div class="parchment honors">@for(secret of unlockedHidden().slice(-3).reverse(); track secret.id){<div class="honor-row earned"><span>{{secret.icon}}</span><div><h3>{{secret.title}}</h3><small>Haut fait obtenu · {{secret.coins}} {{secret.coins === 1 ? 'pièce' : 'pièces'}}</small></div></div>} @empty {<div class="honor-row"><span>🔒</span><div><h3>Des secrets vous attendent</h3><small>Trouvez un code pendant la LAN.</small></div></div>}</div><button class="wood-button secrets-link" (click)="view.set('achievements')">Saisir un code →</button></section>
+    <section class="frame recent-panel"><h2 class="panel-title"><span>🌟</span> Dernières réalisations</h2><div class="recent-list">@for(quest of recent(); track quest.id){<div class="recent-row"><span class="recent-icon">{{questIcon(quest.id)}}</span><p>Vous avez terminé<strong>{{quest.title}}</strong></p><span class="recent-check">✓</span></div>} @empty {<div class="recent-empty"><span>✧</span><p>Votre histoire reste à écrire…<small>Accomplissez votre première quête !</small></p></div>}</div></section>
+  </aside>
+</main>
+<footer><span>✦ FOREVER LAN ✦</span><p>De grandes aventures. De vrais compagnons.</p><span><i></i> Sauvegarde sur cet appareil</span></footer>
+@if(notice()){<div class="toast" role="status"><span>✦</span>{{notice()}}</div>}
+<dialog #questDialog class="frame quest-dialog" aria-labelledby="quest-dialog-title" (click)="dismissBackdrop($event)" (close)="selectedQuest.set(null)">
+  <button class="dialog-close" type="button" aria-label="Fermer les détails de la quête" autofocus (click)="closeQuest()">×</button>
+  @if(selectedQuest(); as quest){
+    <div class="dialog-heading"><span aria-hidden="true">{{questIcon(quest.id)}}</span><div><small>JOURNAL DE LA LAN</small><h2 id="quest-dialog-title">{{quest.title}}</h2></div></div>
+    <div class="parchment dialog-content">
+      <div class="dialog-meta"><span class="type-badge" [class.irl]="quest.category === 'IRL'">{{quest.category}}</span><span [class.finished]="isCompleted(quest)">{{isCompleted(quest) ? '✓ Terminée' : 'À accomplir'}}</span></div>
+      <p class="quest-description">{{quest.description}}</p>
+      <h3>◇ Objectif</h3><p>{{quest.objective}}</p>
+      <div class="dialog-rewards"><h3>Récompense</h3><p class="coin-reward"><span class="coin" aria-hidden="true">✦</span> <strong>{{quest.coins}} {{quest.coins === 1 ? 'pièce' : 'pièces'}}</strong></p></div>
+      @if(isCompleted(quest)){<p class="reward-claimed">✓ Quête accomplie — récompense déjà obtenue.</p>}
+    </div>
+    <div class="dialog-actions"><button class="wood-button" type="button" (click)="closeQuest()">Retour au journal</button><button class="wood-button complete-quest" type="button" [disabled]="isCompleted(quest)" (click)="complete(quest)">{{isCompleted(quest) ? '✓ Déjà terminée' : '✓ Terminer la quête'}}</button></div>
+  }
+</dialog>
+<dialog #profileDialog class="frame quest-dialog profile-dialog" aria-labelledby="profile-dialog-title" aria-describedby="profile-dialog-description" (cancel)="!profile() && $event.preventDefault()">
+  @if(profile()){<button type="button" class="dialog-close" aria-label="Fermer le profil" (click)="profileDialog.close()">×</button>}
+  <div class="dialog-heading"><span aria-hidden="true">🛡️</span><div><small>BIENVENUE À LA FOREVER LAN</small><h2 id="profile-dialog-title">{{profile() ? 'Votre aventurier' : 'Qui rejoint la guilde ?'}}</h2></div></div>
+  <form (submit)="$event.preventDefault(); saveProfile()">
+    <div class="parchment profile-content"><p id="profile-dialog-description">Présentez votre héros avant de commencer l’aventure.</p>
+      <label for="profile-name">Votre nom<input id="profile-name" name="player-name" type="text" required maxlength="32" autocomplete="nickname" autofocus placeholder="Le nom de votre aventurier" [value]="profileName()" (input)="profileName.set($any($event.target).value)"></label>
+      <div class="profile-fields"><label for="profile-race">Race<select id="profile-race" name="race" required [value]="profileRace()" (change)="profileRace.set($any($event.target).value)"><option value="" disabled>Choisir une race</option>@for(race of races; track race){<option [value]="race">{{race}}</option>}</select></label>
+      <label for="profile-class">Classe<select id="profile-class" name="class" required [value]="profileClass()" (change)="profileClass.set($any($event.target).value)"><option value="" disabled>Choisir une classe</option>@for(wowClass of classes; track wowClass){<option [value]="wowClass">{{wowClass}}</option>}</select></label></div>
+      @if(profileError()){<p class="profile-error" role="alert">{{profileError()}}</p>}
+      <p class="profile-save-note">✦ Votre profil sera conservé sur cet appareil.</p>
+    </div><div class="dialog-actions"><button type="submit" class="wood-button complete-quest">{{profile() ? 'Enregistrer mon profil' : 'Rejoindre l’aventure →'}}</button></div>
+  </form>
+</dialog>

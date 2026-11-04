@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "projects": {
+    "forever-lan": {
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.json",
+            "index": "src/index.html",
+            "assets": [{"glob": "**/*", "input": "public"}],
+            "styles": ["src/styles.css"],
+            "outputPath": "dist/forever-lan"
+          },
+          "configurations": {
+            "production": {"optimization": true, "outputHashing": "all"},
+            "development": {"optimization": false, "sourceMap": true}
+          }
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {"buildTarget": "forever-lan:build:development"}
+        }
+      }
+    }
+  }
+}
